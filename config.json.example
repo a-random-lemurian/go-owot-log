@@ -1,0 +1,8 @@
+{
+    "lumberjack": {
+        "filename": "owot.log",
+        "compress": true
+    },
+    "dataDirectory": "data",
+    "worlds": ["", "lemuria", "w", "owot_ws_log"]
+}
