@@ -2,6 +2,7 @@ package logger
 
 import (
 	"encoding/json"
+	"time"
 
 	"github.com/a-random-lemurian/go-owot"
 	"go.uber.org/zap"
@@ -57,6 +58,8 @@ func CreateWorld(worldName string, log *zap.Logger, db Database, acceptGlobal bo
 }
 
 func (w *World) HandleRaw(data []byte) {
+	time := time.Now()
+
 	type partial struct {
 		Kind     string `json:"kind"`
 		Location string `json:"location"`
@@ -78,7 +81,7 @@ func (w *World) HandleRaw(data []byte) {
 		}
 	}
 
-	w.database.AddMessage(&Message{Origin: w.url, WebsocketMessage: data})
+	w.database.AddMessage(&Message{Origin: w.url, WebsocketMessage: data, Time: time})
 }
 
 func (w *World) Run() error {

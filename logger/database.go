@@ -24,5 +24,6 @@ func (pfd *PlaintextFileDatabase) AddMessage(message *Message) {
 	pfd.owotLog.Info("got message",
 		zap.ByteString("rawMessage", message.WebsocketMessage),
 		zap.String("originWebsocketUrl", message.Origin),
+		zap.Time("received", message.Time),
 	)
 }
