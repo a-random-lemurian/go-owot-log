@@ -55,8 +55,13 @@ func cmdStart(cCtx *cli.Context) error {
 				if err != nil {
 					log.Error("Cannot create World", zap.String("worldName", worldName), zap.Error(err))
 					time.Sleep(1 * time.Second)
+					continue
 				}
-				world.Run()
+				err = world.Run()
+				if err != nil {
+					log.Warn("Disconnected from world, reconnecting", zap.String("worldName", worldName), zap.Error(err))
+				}
+				time.Sleep(1 * time.Second)
 			}
 		}()
 	}
