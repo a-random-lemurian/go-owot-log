@@ -6,7 +6,7 @@ import (
 )
 
 type Database interface {
-	AddMessage(*Message)
+	AddMessage(*Message) error
 }
 
 type PlaintextFileDatabase struct {
@@ -20,10 +20,11 @@ func CreatePlainTextFileDatabase(cfg *config.Config) (*PlaintextFileDatabase, er
 	return &db, nil
 }
 
-func (pfd *PlaintextFileDatabase) AddMessage(message *Message) {
+func (pfd *PlaintextFileDatabase) AddMessage(message *Message) error {
 	pfd.owotLog.Info("got message",
 		zap.ByteString("rawMessage", message.WebsocketMessage),
 		zap.String("originWebsocketUrl", message.Origin),
 		zap.Time("received", message.Time),
 	)
+	return nil
 }

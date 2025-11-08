@@ -81,7 +81,10 @@ func (w *World) HandleRaw(data []byte) {
 		}
 	}
 
-	w.database.AddMessage(&Message{Origin: w.url, WebsocketMessage: data, Time: time})
+	err = w.database.AddMessage(&Message{Origin: w.url, WebsocketMessage: data, Time: time})
+	if err != nil {
+		w.appLog.Error("Failed to insert message into database", zap.Error(err), zap.ByteString("rawMessage", data))
+	}
 }
 
 func (w *World) Run() error {
