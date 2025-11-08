@@ -1,0 +1,9 @@
+# ignore build artifacts and git
+.git
+.gitignore
+bin
+/*.log
+Dockerfile*
+*.swp
+node_modules
+.vscode
