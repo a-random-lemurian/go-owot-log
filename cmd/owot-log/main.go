@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/a-random-lemurian/go-owot-log/bot"
 	"github.com/carlmjohnson/versioninfo"
@@ -43,6 +44,7 @@ func runStart(cmd *cobra.Command, args []string) error {
 
 	v.SetEnvPrefix("OWOTLOG")
 	v.AutomaticEnv()
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	v.SetConfigFile(configPath)
 
