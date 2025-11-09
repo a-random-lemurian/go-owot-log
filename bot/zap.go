@@ -3,13 +3,13 @@ package bot
 import (
 	"os"
 
-	"github.com/a-random-lemurian/go-owot-log/config"
 	"github.com/natefinch/lumberjack"
+	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
-func GetZapLogger(config *config.Config, filename string) *zap.Logger {
+func GetZapLogger(v *viper.Viper, filename string) *zap.Logger {
 	// Define level enablers
 	highPriority := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
 		return lvl >= zapcore.InfoLevel 
@@ -50,7 +50,7 @@ func GetZapLogger(config *config.Config, filename string) *zap.Logger {
 
 	// Configure rolling log file
 	logFile := zapcore.AddSync(&lumberjack.Logger{
-		Filename:   config.DataDirectory + "/" + filename,
+		Filename:   v.GetString("data_directory") + "/" + filename,
 		MaxSize:    200, // megabytes
 		Compress:   true,
 	})

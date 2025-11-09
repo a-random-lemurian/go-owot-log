@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/a-random-lemurian/go-owot-log/bot"
-	"github.com/a-random-lemurian/go-owot-log/config"
+	"github.com/spf13/viper"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
 )
@@ -27,20 +27,38 @@ func main() {
 
 	err := app.Run(os.Args)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Printf("error: %s\n", err)
 	}
 }
 
 func cmdStart(cCtx *cli.Context) error {
-	cfg, err := config.LoadDefault()
+	v := viper.New()
+	v.AddConfigPath(".")
+
+	v.SetEnvPrefix("OWOTLOG")
+	v.AutomaticEnv()
+
+	v.SetConfigName("config")
+	v.SetConfigType("yml")
+
+	err := v.ReadInConfig()
 	if err != nil {
 		return err
 	}
-	log := bot.GetZapLogger(cfg, "application.log")
+
+	mandatoryKeys := []string{"worlds", "data_directory", "global_receiver"}
+	for _, key := range mandatoryKeys {
+		if !v.IsSet(key) {
+			fmt.Printf("your settings: %v\n", v.AllSettings())
+			return fmt.Errorf("key %s is required but not set in config", key)
+		}
+	}
+
+	log := bot.GetZapLogger(v, "application.log")
 	log.Info("Hi, good to see you")
 	defer log.Info("Goodbye")
 
-	database, err := bot.CreatePlainTextFileDatabase(cfg)
+	database, err := bot.CreatePlainTextFileDatabase(v)
 	if err != nil {
 		log.Error("Cannot create PlainTextFileDatabase", zap.Error(err))
 		return err
@@ -48,12 +66,15 @@ func cmdStart(cCtx *cli.Context) error {
 
 	wg := sync.WaitGroup{}
 
-	for _, worldName := range cfg.Worlds {
+	worlds := v.GetStringSlice("worlds")
+	globalReceiver := v.GetString("global_receiver")
+
+	for _, worldName := range worlds {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			log.Info("Creating world", zap.String("worldName", worldName))
-			acceptsGlobal := (worldName == cfg.GlobalReceiver)
+			acceptsGlobal := (worldName == globalReceiver)
 			for {
 				world, err := bot.CreateWorld(worldName, log, database, acceptsGlobal)
 				if err != nil {

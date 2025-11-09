@@ -1,8 +1,8 @@
 package bot
 
 import (
-	"github.com/a-random-lemurian/go-owot-log/config"
 	"github.com/a-random-lemurian/go-owot-log/internal/types"
+	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
 
@@ -15,9 +15,9 @@ type PlaintextFileDatabase struct {
 	owotLog *zap.Logger
 }
 
-func CreatePlainTextFileDatabase(cfg *config.Config) (*PlaintextFileDatabase, error) {
+func CreatePlainTextFileDatabase(v *viper.Viper) (*PlaintextFileDatabase, error) {
 	db := PlaintextFileDatabase{}
-	db.owotLog = GetZapLogger(cfg, "owot.log")
+	db.owotLog = GetZapLogger(v, "owot.log")
 	return &db, nil
 }
 
