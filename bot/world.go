@@ -10,7 +10,6 @@ import (
 type World struct {
 	owotConn *owot.OwotConn
 	url      string
-	database Database
 	appLog   *zap.Logger
 	bot *Bot
 
