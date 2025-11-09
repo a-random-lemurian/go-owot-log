@@ -5,7 +5,7 @@ COPY go.mod go.sum ./
 RUN go mod download -x
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-    go build -trimpath -ldflags="-s -w" -o /app/owot-log ./cmd/owot-log
+    go build -v -trimpath -ldflags="-s -w" -o /app/owot-log ./cmd/owot-log
 
 # Stage 2: scratch runtime (includes CA certs from builder)
 FROM scratch
