@@ -58,6 +58,8 @@ func (b *Bot) Run() error {
 
 	b.cmdPrefix = b.v.GetString("command_prefix")
 
+	b.registerCommand("size", chSize)
+
 	worlds := b.v.GetStringSlice("worlds")
 	globalReceiver := b.v.GetString("global_receiver")
 
