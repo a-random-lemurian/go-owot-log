@@ -33,7 +33,7 @@ func CreateOWOTUrl(worldName string) string {
 
 func CreateWorld(worldName string, log *zap.Logger, db Database, acceptGlobal bool) (*World, error) {
 	url := CreateOWOTUrl(worldName)
-	conn, err := owot.Dial(url)
+	conn, err := owot.Dial(url, nil)
 	if err != nil {
 		return nil, err
 	}
