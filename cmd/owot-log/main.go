@@ -2,43 +2,51 @@ package main
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/a-random-lemurian/go-owot-log/bot"
+	"github.com/carlmjohnson/versioninfo"
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/urfave/cli/v2"
 )
 
-func main() {
-	app := &cli.App{
-		Usage:   "A program for monitoring OWOT chat",
-		Authors: []*cli.Author{{Name: "Lemuria"}},
-		Commands: []*cli.Command{
-			{
-				Name:   "start",
-				Usage:  "Start the logger",
-				Action: cmdStart,
-			},
-		},
-	}
-
-	err := app.Run(os.Args)
-	if err != nil {
-		fmt.Printf("error: %s\n", err)
-	}
+var cmdRoot = &cobra.Command{
+	Use:     "owot-log",
+	Short:   "A bot for OWOT chat",
+	Version: versioninfo.Short(),
 }
 
-func cmdStart(cCtx *cli.Context) error {
+var cmdStart = &cobra.Command{
+	Use:   "start",
+	Short: "Start the bot",
+	RunE:  runStart,
+}
+
+func init() {
+	cmdRoot.AddCommand(cmdStart)
+
+	csF := cmdStart.Flags()
+	csF.String("config", "config.yml", "Path to configuration file.")
+}
+
+func main() {
+	cmdRoot.Execute()
+}
+
+func runStart(cmd *cobra.Command, args []string) error {
+	configPath, err := cmd.Flags().GetString("config")
+	if err != nil {
+		return err
+	}
+
 	v := viper.New()
 	v.AddConfigPath(".")
 
 	v.SetEnvPrefix("OWOTLOG")
 	v.AutomaticEnv()
 
-	v.SetConfigName("config")
-	v.SetConfigType("yml")
+	v.SetConfigFile(configPath)
 
-	err := v.ReadInConfig()
+	err = v.ReadInConfig()
 	if err != nil {
 		return err
 	}
