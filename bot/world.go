@@ -1,12 +1,9 @@
 package bot
 
 import (
-	"encoding/json"
 	"net/url"
-	"time"
 
 	"github.com/a-random-lemurian/go-owot"
-	"github.com/a-random-lemurian/go-owot-log/internal/types"
 	"go.uber.org/zap"
 )
 
@@ -15,6 +12,7 @@ type World struct {
 	url      string
 	database Database
 	appLog   *zap.Logger
+	bot *Bot
 
 	AcceptGlobal bool
 }
@@ -39,7 +37,7 @@ func CreateOWOTUrl(worldName string, hide bool) string {
 	return url.String()
 }
 
-func CreateWorld(worldName string, log *zap.Logger, db Database, acceptGlobal bool) (*World, error) {
+func (b *Bot) CreateWorld(worldName string, log *zap.Logger, acceptGlobal bool) (*World, error) {
 	url := CreateOWOTUrl(worldName, true)
 	conn, err := owot.Dial(url, nil)
 	if err != nil {
@@ -48,9 +46,9 @@ func CreateWorld(worldName string, log *zap.Logger, db Database, acceptGlobal bo
 
 	world := &World{
 		owotConn:     conn,
-		database:     db,
 		url:          url,
 		appLog:       log,
+		bot: b,
 		AcceptGlobal: acceptGlobal,
 	}
 
@@ -66,33 +64,7 @@ func CreateWorld(worldName string, log *zap.Logger, db Database, acceptGlobal bo
 }
 
 func (w *World) HandleRaw(data []byte) {
-	time := time.Now()
-
-	type partial struct {
-		Kind     string `json:"kind"`
-		Location string `json:"location"`
-	}
-	var kind partial
-	err := json.Unmarshal(data, &kind)
-	if err != nil {
-		w.appLog.Error("Failed to parse incoming message", zap.Error(err), zap.ByteString("rawMessage", data))
-		return
-	}
-
-	// TODO more robust blacklist system
-	if kind.Kind == "tileUpdate" {
-		return
-	}
-	if kind.Kind == "chat" && kind.Location == "global" {
-		if !w.AcceptGlobal {
-			return
-		}
-	}
-
-	err = w.database.AddMessage(&types.Message{Origin: w.url, WebsocketMessage: data, Time: time})
-	if err != nil {
-		w.appLog.Error("Failed to insert message into database", zap.Error(err), zap.ByteString("rawMessage", data))
-	}
+	w.bot.handleRaw(w, data)
 }
 
 func (w *World) Run() error {

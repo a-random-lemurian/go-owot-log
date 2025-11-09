@@ -51,7 +51,7 @@ func (b *Bot) Run() error {
 			log.Info("Creating world", zap.String("worldName", worldName))
 			acceptsGlobal := (worldName == globalReceiver)
 			for {
-				world, err := CreateWorld(worldName, log, b.db, acceptsGlobal)
+				world, err := b.CreateWorld(worldName, log, acceptsGlobal)
 				if err != nil {
 					log.Error("Cannot create World", zap.String("worldName", worldName), zap.Error(err))
 					time.Sleep(1 * time.Second)
@@ -69,4 +69,41 @@ func (b *Bot) Run() error {
 	wg.Wait()
 
 	return nil
+}
+
+func (b *Bot) handleRaw(w *World, data []byte) {
+	type partial struct {
+		Kind     string `json:"kind"`
+		Location string `json:"location"`
+	}
+	var kind partial
+	err := json.Unmarshal(data, &kind)
+	if err != nil {
+		w.appLog.Error("Failed to parse incoming message", zap.Error(err), zap.ByteString("rawMessage", data))
+		return
+	}
+
+	// TODO more robust blacklist system
+	if kind.Kind == "tileUpdate" {
+		return
+	}
+	if kind.Kind == "chat" && kind.Location == "global" {
+		if !w.AcceptGlobal {
+			return
+		}
+	}
+
+	b.handleChat(w, data)
+}
+
+func (b *Bot) handleChat(w *World, data []byte) {
+	time := time.Now()
+
+	var chat owot.MessageChat
+	json.Unmarshal(data, &chat)
+
+	err := b.db.AddMessage(&types.Message{Origin: w.url, WebsocketMessage: data, Time: time})
+	if err != nil {
+		w.appLog.Error("Failed to insert message into database", zap.Error(err), zap.ByteString("rawMessage", data))
+	}
 }
