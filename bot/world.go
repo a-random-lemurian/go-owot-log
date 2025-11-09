@@ -2,6 +2,7 @@ package bot
 
 import (
 	"encoding/json"
+	"net/url"
 	"time"
 
 	"github.com/a-random-lemurian/go-owot"
@@ -22,18 +23,24 @@ type World struct {
 // Who knows if Fern will set up her own instance of NWOT, a
 // permanent one?
 
-func CreateOWOTUrl(worldName string) string {
-	// Detect the worldName being ""
-	url := "wss://ourworldoftext.com/" + worldName
-	if worldName != "" {
-		url += "/"
+func CreateOWOTUrl(worldName string, hide bool) string {
+	url := &url.URL{
+		Scheme: "wss",
+		Host: "ourworldoftext.com",
+		Path: (worldName + "/") + "ws/",
 	}
-	url += "ws/"
-	return url
+
+	if hide {
+		q := url.Query()
+		q.Add("hide", "1")
+		url.RawQuery = q.Encode()
+	}
+
+	return url.String()
 }
 
 func CreateWorld(worldName string, log *zap.Logger, db Database, acceptGlobal bool) (*World, error) {
-	url := CreateOWOTUrl(worldName)
+	url := CreateOWOTUrl(worldName, true)
 	conn, err := owot.Dial(url, nil)
 	if err != nil {
 		return nil, err
