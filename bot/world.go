@@ -1,10 +1,11 @@
-package logger
+package bot
 
 import (
 	"encoding/json"
 	"time"
 
 	"github.com/a-random-lemurian/go-owot"
+	"github.com/a-random-lemurian/go-owot-log/internal/types"
 	"go.uber.org/zap"
 )
 
@@ -81,7 +82,7 @@ func (w *World) HandleRaw(data []byte) {
 		}
 	}
 
-	err = w.database.AddMessage(&Message{Origin: w.url, WebsocketMessage: data, Time: time})
+	err = w.database.AddMessage(&types.Message{Origin: w.url, WebsocketMessage: data, Time: time})
 	if err != nil {
 		w.appLog.Error("Failed to insert message into database", zap.Error(err), zap.ByteString("rawMessage", data))
 	}

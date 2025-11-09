@@ -1,12 +1,13 @@
-package logger
+package bot
 
 import (
 	"github.com/a-random-lemurian/go-owot-log/config"
+	"github.com/a-random-lemurian/go-owot-log/internal/types"
 	"go.uber.org/zap"
 )
 
 type Database interface {
-	AddMessage(*Message) error
+	AddMessage(*types.Message) error
 }
 
 type PlaintextFileDatabase struct {
@@ -20,7 +21,7 @@ func CreatePlainTextFileDatabase(cfg *config.Config) (*PlaintextFileDatabase, er
 	return &db, nil
 }
 
-func (pfd *PlaintextFileDatabase) AddMessage(message *Message) error {
+func (pfd *PlaintextFileDatabase) AddMessage(message *types.Message) error {
 	pfd.owotLog.Info("got message",
 		zap.ByteString("rawMessage", message.WebsocketMessage),
 		zap.String("originWebsocketUrl", message.Origin),

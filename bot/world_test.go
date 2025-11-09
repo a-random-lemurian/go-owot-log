@@ -1,9 +1,9 @@
-package logger_test
+package bot_test
 
 import (
 	"testing"
 
-	"github.com/a-random-lemurian/go-owot-log/logger"
+	"github.com/a-random-lemurian/go-owot-log/bot"
 )
 
 type testcase struct {
@@ -18,7 +18,7 @@ func TestOWOTUrlCreation(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		actual := logger.CreateOWOTUrl(testcase.Input)
+		actual := bot.CreateOWOTUrl(testcase.Input)
 		if actual != testcase.Expected {
 			t.Errorf("did not get expected output: input %s, actual %s, expected %s", testcase.Input, actual, testcase.Expected)
 		}

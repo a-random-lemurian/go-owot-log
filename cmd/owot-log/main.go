@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/a-random-lemurian/go-owot-log/bot"
 	"github.com/a-random-lemurian/go-owot-log/config"
-	"github.com/a-random-lemurian/go-owot-log/logger"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
 )
@@ -36,11 +36,11 @@ func cmdStart(cCtx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	log := logger.GetZapLogger(cfg, "application.log")
+	log := bot.GetZapLogger(cfg, "application.log")
 	log.Info("Hi, good to see you")
 	defer log.Info("Goodbye")
 
-	database, err := logger.CreatePlainTextFileDatabase(cfg)
+	database, err := bot.CreatePlainTextFileDatabase(cfg)
 	if err != nil {
 		log.Error("Cannot create PlainTextFileDatabase", zap.Error(err))
 		return err
@@ -55,7 +55,7 @@ func cmdStart(cCtx *cli.Context) error {
 			log.Info("Creating world", zap.String("worldName", worldName))
 			acceptsGlobal := (worldName == cfg.GlobalReceiver)
 			for {
-				world, err := logger.CreateWorld(worldName, log, database, acceptsGlobal)
+				world, err := bot.CreateWorld(worldName, log, database, acceptsGlobal)
 				if err != nil {
 					log.Error("Cannot create World", zap.String("worldName", worldName), zap.Error(err))
 					time.Sleep(1 * time.Second)
