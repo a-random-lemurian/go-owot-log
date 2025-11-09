@@ -2,6 +2,7 @@ package bot
 
 import (
 	"encoding/json"
+	"strings"
 	"sync"
 	"time"
 
@@ -11,14 +12,25 @@ import (
 	"go.uber.org/zap"
 )
 
+type CommandFunction func(*Bot, *World, *owot.MessageChat)
+
 type Bot struct {
-	v  *viper.Viper
-	log *zap.Logger
-	db Database
+	v         *viper.Viper
+	log       *zap.Logger
+	db        Database
+	cmdPrefix string
+	cmds      map[string]CommandFunction
+	cmdsMu    sync.Mutex
 }
 
 func NewBot(v *viper.Viper) (*Bot, error) {
-	return &Bot{v: v}, nil
+	return &Bot{v: v, cmds: make(map[string]CommandFunction)}, nil
+}
+
+func (b *Bot) registerCommand(name string, fn CommandFunction) {
+	b.cmdsMu.Lock()
+	defer b.cmdsMu.Unlock()
+	b.cmds[name] = fn
 }
 
 func (b *Bot) getDatabase() error {
@@ -43,6 +55,8 @@ func (b *Bot) Run() error {
 	defer log.Info("Goodbye")
 
 	wg := sync.WaitGroup{}
+
+	b.cmdPrefix = b.v.GetString("command_prefix")
 
 	worlds := b.v.GetStringSlice("worlds")
 	globalReceiver := b.v.GetString("global_receiver")
@@ -103,10 +117,33 @@ func (b *Bot) handleChat(w *World, data []byte) {
 	time := time.Now()
 
 	var chat owot.MessageChat
-	json.Unmarshal(data, &chat)
+	if err := json.Unmarshal(data, &chat); err != nil {
+		b.log.Error("failed to parse message", zap.Error(err), zap.ByteString("rawData", data))
+	}
+
+	if strings.HasPrefix(chat.Message, b.cmdPrefix) {
+		b.handleCommand(w, &chat)
+	}
 
 	err := b.db.AddMessage(&types.Message{Origin: w.url, WebsocketMessage: data, Time: time})
 	if err != nil {
 		w.appLog.Error("Failed to insert message into database", zap.Error(err), zap.ByteString("rawMessage", data))
+	}
+}
+
+func (b *Bot) handleCommand(w *World, chat *owot.MessageChat) {
+	fields := strings.Fields(chat.Message)
+	if len(fields) < 2 {
+		return
+	}
+
+	commandName := fields[1]
+
+	b.cmdsMu.Lock()
+	defer b.cmdsMu.Unlock()
+
+	commandFn, ok := b.cmds[commandName]
+	if ok {
+		commandFn(b, w, chat)
 	}
 }

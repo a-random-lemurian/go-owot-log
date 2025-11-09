@@ -69,3 +69,8 @@ func (w *World) HandleRaw(data []byte) {
 func (w *World) Run() error {
 	return w.owotConn.Run()
 }
+
+// A wrapper for owotConn chat.
+func (w *World) Chat(message string, location string) error {
+	return w.owotConn.Chat(w.bot.v.GetString("chat.nickname"), message, location, w.bot.v.GetString("chat.color"), nil)
+}
