@@ -2,10 +2,9 @@
 # .git -- we don't ignore git so that versioninfo will work
 # here's hoping it doesn't bloat the build image
 # .gitignore
-bin
-/*.log
-Dockerfile*
-*.swp
-node_modules
-.vscode
 data
+config.json
+config.yml
+config*.yml
+bin
+build
