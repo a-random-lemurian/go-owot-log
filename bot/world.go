@@ -1,9 +1,12 @@
 package bot
 
 import (
+	"fmt"
 	"net/url"
+	"time"
 
 	"github.com/a-random-lemurian/go-owot"
+	"github.com/carlmjohnson/versioninfo"
 	"go.uber.org/zap"
 )
 
@@ -72,5 +75,8 @@ func (w *World) Run() error {
 
 // A wrapper for owotConn chat.
 func (w *World) Chat(message string, location string) error {
-	return w.owotConn.Chat(w.bot.v.GetString("chat.nickname"), message, location, w.bot.v.GetString("chat.color"), nil)
+	msgMeta := map[string]any{}
+	msgMeta["version"] = fmt.Sprintf("go-owot-log version %s", versioninfo.Short())
+	msgMeta["sent-date"] = time.Now().UTC().UnixMilli()
+	return w.owotConn.Chat(w.bot.v.GetString("chat.nickname"), message, location, w.bot.v.GetString("chat.color"), msgMeta)
 }
