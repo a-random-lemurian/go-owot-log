@@ -8,3 +8,15 @@ heavy database.
 
 Not to be confused with [go-owot](https://github.com/a-random-lemurian/go-owot), which
 handles the OWOT websocket protocol itself.
+
+## Run
+
+The preferred method for running in production is to use Docker. Thankfully, it's as easy
+as `make docker` and `docker compose up`.
+
+To transfer to the VPS or whereever the production image is being run:
+```
+docker save lemuriaph/go-owot-log-main:latest | pv | ssh lemuria@vps1 docker load
+```
+
+(This command will only work for Lemuria; replace the ssh command with your own server)
