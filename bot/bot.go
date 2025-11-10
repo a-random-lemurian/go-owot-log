@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/a-random-lemurian/go-owot"
@@ -29,6 +30,7 @@ type Bot struct {
 	cmdPrefix string
 	cmds      map[string]*Command
 	cmdsMu    sync.Mutex
+	msgCount  atomic.Int64
 }
 
 func NewBot(v *viper.Viper) (*Bot, error) {
@@ -147,6 +149,8 @@ func (b *Bot) handleChat(w *World, data []byte) {
 	if err := json.Unmarshal(data, &chat); err != nil {
 		b.log.Error("failed to parse message", zap.Error(err), zap.ByteString("rawData", data))
 	}
+
+	b.msgCount.Add(1)
 
 	if strings.HasPrefix(chat.Message, b.cmdPrefix) {
 		b.handleCommand(w, &chat)

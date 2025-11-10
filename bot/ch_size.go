@@ -16,5 +16,12 @@ func chSize(b *Bot, w *World, c *owot.MessageChat) {
 	if err != nil {
 		b.log.Error("oops", zap.Error(err))
 	}
-	w.Chat(fmt.Sprintf("data directory: %s", humanize.Bytes(uint64(size))), c.Location)
+	w.Chat(
+		fmt.Sprintf(
+			"data directory: %s / since bot start: %d msgs logged",
+			humanize.Bytes(uint64(size)),
+			b.msgCount.Load(),
+		),
+		c.Location,
+	)
 }
