@@ -22,6 +22,7 @@ type Command struct {
 }
 
 type Bot struct {
+	startTime time.Time
 	v         *viper.Viper
 	log       *zap.Logger
 	db        Database
@@ -79,6 +80,9 @@ func (b *Bot) Run() error {
 	b.cmdPrefix = b.v.GetString("command_prefix")
 
 	b.registerCommand("size", chSize)
+	b.registerCommand("uptime", chUptime)
+	b.registerCommand("version", chVersion)
+	b.registerCommand("help", chHelp)
 
 	worlds := b.v.GetStringSlice("worlds")
 	globalReceiver := b.v.GetString("global_receiver")
