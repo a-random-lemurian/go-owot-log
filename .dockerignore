@@ -1,7 +1,7 @@
 # ignore build artifacts and git
 # .git -- we don't ignore git so that versioninfo will work
 # here's hoping it doesn't bloat the build image
-.gitignore
+# .gitignore
 bin
 /*.log
 Dockerfile*
