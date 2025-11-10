@@ -7,8 +7,8 @@ import (
 )
 
 type testcase struct {
-	Input string
-	Hide bool
+	Input    string
+	Hide     bool
 	Expected string
 }
 

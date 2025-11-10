@@ -17,7 +17,7 @@ import (
 type CommandFunction func(*Bot, *World, *owot.MessageChat)
 
 type Command struct {
-	Function CommandFunction
+	Function  CommandFunction
 	Ratelimit *rate.Limiter
 }
 
@@ -41,11 +41,11 @@ func (b *Bot) registerCommand(name string, fn CommandFunction) {
 
 	// rlKey: ratelimit key
 	rlKey := fmt.Sprintf("ratelimits.commands.%s", name)
-	b.v.SetDefault(rlKey, 1 * time.Second)
+	b.v.SetDefault(rlKey, 1*time.Second)
 	rl := b.v.GetDuration(rlKey)
 
 	cmd := &Command{
-		Function: fn,
+		Function:  fn,
 		Ratelimit: rate.NewLimiter(rate.Every(rl), 1),
 	}
 
@@ -65,6 +65,7 @@ func (b *Bot) getDatabase() error {
 }
 
 func (b *Bot) Run() error {
+	b.startTime = time.Now()
 	log := GetZapLogger(b.v, "application.log")
 	b.log = log
 

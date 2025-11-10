@@ -3,9 +3,9 @@ package bot
 import (
 	"fmt"
 
-	"github.com/dustin/go-humanize"
 	"github.com/a-random-lemurian/go-owot"
 	"github.com/a-random-lemurian/go-owot-log/internal/util"
+	"github.com/dustin/go-humanize"
 	"go.uber.org/zap"
 )
 

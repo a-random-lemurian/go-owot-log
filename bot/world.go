@@ -11,7 +11,7 @@ type World struct {
 	owotConn *owot.OwotConn
 	url      string
 	appLog   *zap.Logger
-	bot *Bot
+	bot      *Bot
 
 	AcceptGlobal bool
 }
@@ -23,8 +23,8 @@ type World struct {
 func CreateOWOTUrl(worldName string, hide bool) string {
 	url := &url.URL{
 		Scheme: "wss",
-		Host: "ourworldoftext.com",
-		Path: (worldName + "/") + "ws/",
+		Host:   "ourworldoftext.com",
+		Path:   (worldName + "/") + "ws/",
 	}
 
 	if hide {
@@ -47,7 +47,7 @@ func (b *Bot) CreateWorld(worldName string, log *zap.Logger, acceptGlobal bool) 
 		owotConn:     conn,
 		url:          url,
 		appLog:       log,
-		bot: b,
+		bot:          b,
 		AcceptGlobal: acceptGlobal,
 	}
 
