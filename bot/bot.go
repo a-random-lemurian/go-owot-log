@@ -31,10 +31,11 @@ type Bot struct {
 	cmds      map[string]*Command
 	cmdsMu    sync.Mutex
 	msgCount  atomic.Int64
+	trustedUsers map[string]any
 }
 
 func NewBot(v *viper.Viper) (*Bot, error) {
-	return &Bot{v: v, cmds: make(map[string]*Command)}, nil
+	return &Bot{v: v, cmds: make(map[string]*Command), trustedUsers: make(map[string]any)}, nil
 }
 
 func (b *Bot) registerCommand(name string, fn CommandFunction) {
@@ -81,6 +82,11 @@ func (b *Bot) Run() error {
 	wg := sync.WaitGroup{}
 
 	b.cmdPrefix = b.v.GetString("command_prefix")
+
+	trusted := b.v.GetStringSlice("users.trusted")
+	for _, v := range trusted {
+		b.trustedUsers[v] = 1
+	}
 
 	b.registerCommand("size", chSize)
 	b.registerCommand("uptime", chUptime)
@@ -162,6 +168,11 @@ func (b *Bot) handleChat(w *World, data []byte) {
 	}
 }
 
+func (b *Bot) isTrusted(chat *owot.MessageChat) bool {
+	_, ok := b.trustedUsers[chat.RealUsername]
+	return ok && b.v.GetBool("ratelimits.trusted_exempt")
+}
+
 func (b *Bot) handleCommand(w *World, chat *owot.MessageChat) {
 	fields := strings.Fields(chat.Message)
 	if len(fields) < 2 {
@@ -171,7 +182,7 @@ func (b *Bot) handleCommand(w *World, chat *owot.MessageChat) {
 	commandName := fields[1]
 	command, ok := b.cmds[commandName]
 	if ok {
-		if command.Ratelimit.AllowN(time.Now(), 1) {
+		if command.Ratelimit.AllowN(time.Now(), 1) || b.isTrusted(chat) {
 			command.Function(b, w, chat)
 		}
 	}
