@@ -2,9 +2,14 @@
 FROM golang:1.24-bullseye AS builder
 WORKDIR /src
 COPY go.mod go.sum ./
-RUN go mod download -x
+RUN --mount=type=cache,target=/go/pkg/mod \
+    go mod download -x
+
+
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
     go build -v -trimpath -ldflags="-s -w" -o /app/owot-log ./cmd/owot-log
 
 # Stage 2: scratch runtime (includes CA certs from builder)
