@@ -2,6 +2,7 @@ package bot
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -10,27 +11,46 @@ import (
 	"github.com/a-random-lemurian/go-owot-log/internal/types"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
+	"golang.org/x/time/rate"
 )
 
 type CommandFunction func(*Bot, *World, *owot.MessageChat)
+
+type Command struct {
+	Function CommandFunction
+	Ratelimit *rate.Limiter
+}
 
 type Bot struct {
 	v         *viper.Viper
 	log       *zap.Logger
 	db        Database
 	cmdPrefix string
-	cmds      map[string]CommandFunction
+	cmds      map[string]*Command
 	cmdsMu    sync.Mutex
 }
 
 func NewBot(v *viper.Viper) (*Bot, error) {
-	return &Bot{v: v, cmds: make(map[string]CommandFunction)}, nil
+	return &Bot{v: v, cmds: make(map[string]*Command)}, nil
 }
 
 func (b *Bot) registerCommand(name string, fn CommandFunction) {
 	b.cmdsMu.Lock()
 	defer b.cmdsMu.Unlock()
-	b.cmds[name] = fn
+
+	// rlKey: ratelimit key
+	rlKey := fmt.Sprintf("ratelimits.commands.%s", name)
+	b.v.SetDefault(rlKey, 1 * time.Second)
+	rl := b.v.GetDuration(rlKey)
+
+	cmd := &Command{
+		Function: fn,
+		Ratelimit: rate.NewLimiter(rate.Every(rl), 1),
+	}
+
+	b.log.Info(fmt.Sprintf("Registering new command %s, ratelimit 1 per %s", name, rl), zap.Duration("ratelimit", rl))
+
+	b.cmds[name] = cmd
 }
 
 func (b *Bot) getDatabase() error {
@@ -140,12 +160,10 @@ func (b *Bot) handleCommand(w *World, chat *owot.MessageChat) {
 	}
 
 	commandName := fields[1]
-
-	b.cmdsMu.Lock()
-	defer b.cmdsMu.Unlock()
-
-	commandFn, ok := b.cmds[commandName]
+	command, ok := b.cmds[commandName]
 	if ok {
-		commandFn(b, w, chat)
+		if command.Ratelimit.AllowN(time.Now(), 1) {
+			command.Function(b, w, chat)
+		}
 	}
 }
