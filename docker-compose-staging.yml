@@ -1,0 +1,19 @@
+version: "3.9"
+
+services:
+  main:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: lemuriaph/go-owot-log-main:latest
+    restart: unless-stopped
+    environment:
+      - ENV=staging
+    volumes:
+      - ./data:/app/data
+      - ./config-staging.yml:/app/config.yml
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"     # max size per log file
+        max-file: "5"       # number of rotated files to keep
