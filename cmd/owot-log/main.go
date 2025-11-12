@@ -66,7 +66,7 @@ func runStart(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	bot.Run()
+	err = bot.Run()
 
-	return nil
+	return err
 }
