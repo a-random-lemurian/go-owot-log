@@ -81,6 +81,11 @@ func (l *Lastseen) validateConsent(s string) (bool, error) {
 
 func (l *Lastseen) cmdLastseen(chatCtx chatcmd.Context, c *owot.MessageChat) {
 	tokens := strings.Fields(c.Message)
+	if len(tokens) < 3 {
+		chatCtx.Chat("usage: ch lastseen <user>")
+		return
+	}
+
 	target := tokens[2]
 	consent := l.db.Consents(target)
 	if !consent {
@@ -98,6 +103,11 @@ func (l *Lastseen) cmdLastseen(chatCtx chatcmd.Context, c *owot.MessageChat) {
 
 func (l *Lastseen) cmdConsent(chatCtx chatcmd.Context, c *owot.MessageChat) {
 	tokens := strings.Fields(c.Message)
+
+	if len(tokens) < 3 {
+		chatCtx.Chat("usage: ch lastseen-consent {yes|no}")
+		return
+	}
 
 	consent, err := l.validateConsent(tokens[2])
 	if err != nil {
