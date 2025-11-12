@@ -1,6 +1,8 @@
 package chatcmd
 
 import (
+	"time"
+
 	"github.com/a-random-lemurian/go-owot"
 	"github.com/spf13/viper"
 	"golang.org/x/time/rate"
@@ -8,6 +10,7 @@ import (
 
 type Context interface {
 	Chat(message string)
+	StartTime() time.Time
 	IsTrusted(username string) bool
 	Viper() *viper.Viper
 }

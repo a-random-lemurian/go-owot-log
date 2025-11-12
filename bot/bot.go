@@ -5,24 +5,18 @@ import (
 	"fmt"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/a-random-lemurian/go-owot"
 	"github.com/a-random-lemurian/go-owot-log/bot/chatcmd"
+	"github.com/a-random-lemurian/go-owot-log/bot/chsize"
+	"github.com/a-random-lemurian/go-owot-log/bot/cmdcore"
 	"github.com/a-random-lemurian/go-owot-log/bot/world"
 	"github.com/a-random-lemurian/go-owot-log/internal/types"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"golang.org/x/time/rate"
 )
-
-type CommandFunction func(*Bot, *world.World, *owot.MessageChat)
-
-type Command struct {
-	Function  CommandFunction
-	Ratelimit *rate.Limiter
-}
 
 type Bot struct {
 	startTime time.Time
@@ -92,10 +86,13 @@ func (b *Bot) Run() error {
 		b.trustedUsers[v] = 1
 	}
 
-	b.RegisterCommand("size", chSize)
-	b.RegisterCommand("uptime", chUptime)
-	b.RegisterCommand("version", chVersion)
-	b.RegisterCommand("help", chHelp)
+	msgCount := chsize.NewMsgCounter()
+	msgCount.RegisterCommands(b)
+	b.msgCount = msgCount
+
+	b.RegisterCommand("uptime", cmdcore.Uptime)
+	b.RegisterCommand("version", cmdcore.Version)
+	b.RegisterCommand("help", cmdcore.Help)
 
 	worlds := b.v.GetStringSlice("worlds")
 	globalReceiver := b.v.GetString("global_receiver")
@@ -160,7 +157,7 @@ func (b *Bot) handleChat(w *world.World, data []byte) {
 		b.log.Error("failed to parse message", zap.Error(err), zap.ByteString("rawData", data))
 	}
 
-	b.msgCount.Add(1)
+	b.msgCount.IngestMessage(&chat)
 
 	shouldReply := b.v.GetBool(fmt.Sprintf("chat.location.%s.enabled", chat.Location))
 	if strings.HasPrefix(chat.Message, b.cmdPrefix) && shouldReply {
@@ -182,6 +179,7 @@ type botContext struct {
 	b *Bot
 	w *world.World
 	c *owot.MessageChat
+	startTime time.Time
 }
 
 func (bc *botContext) Chat(message string) {
@@ -197,6 +195,10 @@ func (bc *botContext) Viper() *viper.Viper {
 	return bc.b.v
 }
 
+func (bc *botContext) StartTime() time.Time {
+	return bc.startTime
+}
+
 func (b *Bot) handleCommand(w *world.World, chat *owot.MessageChat) {
 	fields := strings.Fields(chat.Message)
 	if len(fields) < 2 {
@@ -207,6 +209,7 @@ func (b *Bot) handleCommand(w *world.World, chat *owot.MessageChat) {
 		b: b,
 		w: w,
 		c: chat,
+		startTime: b.startTime,
 	}
 
 	commandName := fields[1]
