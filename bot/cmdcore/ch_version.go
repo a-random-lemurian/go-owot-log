@@ -3,8 +3,10 @@ package cmdcore
 import (
 	"fmt"
 
-	"github.com/a-random-lemurian/go-owot"
 	"github.com/a-random-lemurian/go-owot-log/bot/chatcmd"
+
+	"github.com/a-random-lemurian/go-owot"
+
 	"github.com/carlmjohnson/versioninfo"
 )
 

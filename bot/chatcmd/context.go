@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/a-random-lemurian/go-owot"
+
 	"github.com/spf13/viper"
 	"golang.org/x/time/rate"
 )

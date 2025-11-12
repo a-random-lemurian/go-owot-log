@@ -7,12 +7,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/a-random-lemurian/go-owot"
 	"github.com/a-random-lemurian/go-owot-log/bot/chatcmd"
 	"github.com/a-random-lemurian/go-owot-log/bot/chsize"
 	"github.com/a-random-lemurian/go-owot-log/bot/cmdcore"
 	"github.com/a-random-lemurian/go-owot-log/bot/world"
 	"github.com/a-random-lemurian/go-owot-log/internal/types"
+
+	"github.com/a-random-lemurian/go-owot"
+
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"golang.org/x/time/rate"

@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/a-random-lemurian/go-owot"
 	"github.com/a-random-lemurian/go-owot-log/bot/chatcmd"
+
+	"github.com/a-random-lemurian/go-owot"
 )
 
 // type CommandFunction func(*Bot,*World,*owot.MessageChat)

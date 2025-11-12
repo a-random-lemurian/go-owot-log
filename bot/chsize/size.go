@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"sync/atomic"
 
-	"github.com/a-random-lemurian/go-owot"
 	"github.com/a-random-lemurian/go-owot-log/bot/chatcmd"
 	"github.com/a-random-lemurian/go-owot-log/internal/util"
+
+	"github.com/a-random-lemurian/go-owot"
+
 	"github.com/dustin/go-humanize"
 )
 

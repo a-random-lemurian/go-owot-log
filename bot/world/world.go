@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/a-random-lemurian/go-owot"
+
 	"github.com/carlmjohnson/versioninfo"
 	"go.uber.org/zap"
 )

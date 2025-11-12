@@ -2,6 +2,7 @@ package bot
 
 import (
 	"github.com/a-random-lemurian/go-owot-log/internal/types"
+
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )

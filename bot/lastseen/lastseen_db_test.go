@@ -4,8 +4,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/a-random-lemurian/go-owot"
 	"github.com/a-random-lemurian/go-owot-log/bot/lastseen"
+	
+	"github.com/a-random-lemurian/go-owot"
+
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
