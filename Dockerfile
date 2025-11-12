@@ -9,7 +9,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 COPY . .
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
-    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    CGO_ENABLED=1 GOOS=linux GOARCH=amd64 \
     go build -v -trimpath -ldflags="-s -w" -o /app/owot-log ./cmd/owot-log
 
 # Stage 2: scratch runtime (includes CA certs from builder)
