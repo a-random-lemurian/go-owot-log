@@ -1,7 +1,6 @@
 package lastseen
 
 import (
-	"errors"
 	"time"
 
 	"gorm.io/gorm"
@@ -31,14 +30,7 @@ func NewGormLastseenDB(gorm *gorm.DB) *GormLastseenDB {
 	return db
 }
 
-var ErrNoConsent = errors.New("user did not consent to time lookups")
-
 func (g *GormLastseenDB) GetLastseen(realUsername string) (time.Time, error) {
-	consent := g.Consents(realUsername)
-	if !consent {
-		return time.Time{}, ErrNoConsent
-	}
-
 	query := LastseenUserEntry{RealUsername: realUsername}
 	var user LastseenUserEntry
 	tx := g.gorm.First(&user, query)
@@ -51,17 +43,33 @@ func (g *GormLastseenDB) GetLastseen(realUsername string) (time.Time, error) {
 func (g *GormLastseenDB) SetLastseen(realUsername string, lastseenTime time.Time) error {
 	var user LastseenUserEntry
 	tx := g.gorm.Where(LastseenUserEntry{RealUsername: realUsername}).
-		Assign(LastseenUserEntry{Time: lastseenTime}).
-		FirstOrCreate(&user)
-	return tx.Error
+		Attrs(LastseenUserEntry{Consent: true}).
+		FirstOrInit(&user)
+
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	user.Time = lastseenTime
+	return g.gorm.Save(&user).Error
 }
 
 func (g *GormLastseenDB) SetConsent(realUsername string, consent bool) error {
 	var user LastseenUserEntry
-	tx := g.gorm.Where(LastseenUserEntry{RealUsername: realUsername}).
-		Assign(LastseenUserEntry{Consent: consent}).
-		FirstOrCreate(&user)
-	return tx.Error
+	tx := g.gorm.Where(LastseenUserEntry{RealUsername: realUsername}).First(&user)
+	if tx.Error != nil {
+		if tx.Error == gorm.ErrRecordNotFound {
+			user = LastseenUserEntry{
+				RealUsername: realUsername,
+				Consent:      consent,
+			}
+			return g.gorm.Create(&user).Error
+		}
+		return tx.Error
+	}
+
+	user.Consent = consent
+	return g.gorm.Save(&user).Error
 }
 
 func (g *GormLastseenDB) Consents(realUsername string) bool {
