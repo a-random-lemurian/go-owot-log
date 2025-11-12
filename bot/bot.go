@@ -38,7 +38,7 @@ func NewBot(v *viper.Viper) (*Bot, error) {
 	return &Bot{v: v, cmds: make(map[string]*Command), trustedUsers: make(map[string]any)}, nil
 }
 
-func (b *Bot) registerCommand(name string, fn CommandFunction) {
+func (b *Bot) RegisterCommand(name string, fn CommandFunction) {
 	b.cmdsMu.Lock()
 	defer b.cmdsMu.Unlock()
 
@@ -88,10 +88,10 @@ func (b *Bot) Run() error {
 		b.trustedUsers[v] = 1
 	}
 
-	b.registerCommand("size", chSize)
-	b.registerCommand("uptime", chUptime)
-	b.registerCommand("version", chVersion)
-	b.registerCommand("help", chHelp)
+	b.RegisterCommand("size", chSize)
+	b.RegisterCommand("uptime", chUptime)
+	b.RegisterCommand("version", chVersion)
+	b.RegisterCommand("help", chHelp)
 
 	worlds := b.v.GetStringSlice("worlds")
 	globalReceiver := b.v.GetString("global_receiver")
@@ -168,7 +168,7 @@ func (b *Bot) handleChat(w *World, data []byte) {
 	}
 }
 
-func (b *Bot) isTrusted(chat *owot.MessageChat) bool {
+func (b *Bot) IsTrusted(chat *owot.MessageChat) bool {
 	_, ok := b.trustedUsers[chat.RealUsername]
 	return ok && b.v.GetBool("ratelimits.trusted_exempt")
 }
@@ -182,7 +182,7 @@ func (b *Bot) handleCommand(w *World, chat *owot.MessageChat) {
 	commandName := fields[1]
 	command, ok := b.cmds[commandName]
 	if ok {
-		if command.Ratelimit.AllowN(time.Now(), 1) || b.isTrusted(chat) {
+		if command.Ratelimit.AllowN(time.Now(), 1) || b.IsTrusted(chat) {
 			command.Function(b, w, chat)
 		}
 	}
