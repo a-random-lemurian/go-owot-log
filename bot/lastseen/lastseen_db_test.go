@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/a-random-lemurian/go-owot-log/bot/lastseen"
-	
+
 	"github.com/a-random-lemurian/go-owot"
 
 	"gorm.io/driver/sqlite"
@@ -146,7 +146,6 @@ func TestLaterOptout(t *testing.T) {
 		t.Errorf("consent needs to be 0!!")
 	}
 }
-
 
 func TestPreemptiveOptout(t *testing.T) {
 	db, err := setup()

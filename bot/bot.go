@@ -19,14 +19,14 @@ import (
 )
 
 type Bot struct {
-	startTime time.Time
-	v         *viper.Viper
-	log       *zap.Logger
-	db        Database
-	cmdPrefix string
-	cmds      map[string]*chatcmd.Command
-	cmdsMu    sync.Mutex
-	msgCount  *chsize.MsgCounter
+	startTime    time.Time
+	v            *viper.Viper
+	log          *zap.Logger
+	db           Database
+	cmdPrefix    string
+	cmds         map[string]*chatcmd.Command
+	cmdsMu       sync.Mutex
+	msgCount     *chsize.MsgCounter
 	trustedUsers map[string]any
 	lastseen     *lastseen.Lastseen
 }

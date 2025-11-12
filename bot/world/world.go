@@ -58,7 +58,7 @@ func CreateWorld(worldName string, log *zap.Logger, rawSink RawSink, acceptGloba
 		url:          url,
 		appLog:       log,
 		AcceptGlobal: acceptGlobal,
-		rawSink: rawSink,
+		rawSink:      rawSink,
 	}
 
 	conn.HandleRaw = world.handleRaw

@@ -12,9 +12,9 @@ import (
 )
 
 type botContext struct {
-	b *Bot
-	w *world.World
-	c *owot.MessageChat
+	b         *Bot
+	w         *world.World
+	c         *owot.MessageChat
 	startTime time.Time
 }
 
@@ -42,9 +42,9 @@ func (b *Bot) handleCommand(w *world.World, chat *owot.MessageChat) {
 	}
 
 	chatCtx := &botContext{
-		b: b,
-		w: w,
-		c: chat,
+		b:         b,
+		w:         w,
+		c:         chat,
 		startTime: b.startTime,
 	}
 
