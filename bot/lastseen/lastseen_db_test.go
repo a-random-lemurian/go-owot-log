@@ -103,3 +103,91 @@ func TestConsent(t *testing.T) {
 		})
 	}
 }
+
+func TestDefaultConsent(t *testing.T) {
+	db, err := setup()
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = db.SetLastseen("privacyguy", time.UnixMilli(1000))
+	if err != nil {
+		t.Error(err)
+	}
+
+	if !db.Consents("privacyguy") {
+		t.Errorf("consent needs to be 1 by default!!")
+	}
+}
+
+func TestLaterOptout(t *testing.T) {
+	db, err := setup()
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = db.SetLastseen("privacyguy", time.UnixMilli(1000))
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = db.SetConsent("privacyguy", false)
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = db.SetLastseen("privacyguy", time.UnixMilli(1005))
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	if db.Consents("privacyguy") {
+		t.Errorf("consent needs to be 0!!")
+	}
+}
+
+
+func TestPreemptiveOptout(t *testing.T) {
+	db, err := setup()
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = db.SetConsent("privacyguy", false)
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = db.SetLastseen("privacyguy", time.UnixMilli(1005))
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	if db.Consents("privacyguy") {
+		t.Errorf("consent needs to be 0!!")
+	}
+}
+
+func TestPreemptiveOptin(t *testing.T) {
+	db, err := setup()
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = db.SetConsent("logme", true)
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = db.SetLastseen("logme", time.UnixMilli(1005))
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	if !db.Consents("logme") {
+		t.Errorf("consent needs to be 1!!")
+	}
+}
