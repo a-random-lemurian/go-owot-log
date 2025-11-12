@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/a-random-lemurian/go-owot"
+	"github.com/a-random-lemurian/go-owot-log/bot/chatcmd"
 	"github.com/a-random-lemurian/go-owot-log/bot/world"
 	"github.com/a-random-lemurian/go-owot-log/internal/types"
 	"github.com/spf13/viper"
@@ -29,17 +30,17 @@ type Bot struct {
 	log       *zap.Logger
 	db        Database
 	cmdPrefix string
-	cmds      map[string]*Command
+	cmds      map[string]*chatcmd.Command
 	cmdsMu    sync.Mutex
-	msgCount  atomic.Int64
+	msgCount  *chsize.MsgCounter
 	trustedUsers map[string]any
 }
 
 func NewBot(v *viper.Viper) (*Bot, error) {
-	return &Bot{v: v, cmds: make(map[string]*Command), trustedUsers: make(map[string]any)}, nil
+	return &Bot{v: v, cmds: make(map[string]*chatcmd.Command), trustedUsers: make(map[string]any)}, nil
 }
 
-func (b *Bot) RegisterCommand(name string, fn CommandFunction) {
+func (b *Bot) RegisterCommand(name string, fn chatcmd.CommandFunction) {
 	b.cmdsMu.Lock()
 	defer b.cmdsMu.Unlock()
 
@@ -48,7 +49,7 @@ func (b *Bot) RegisterCommand(name string, fn CommandFunction) {
 	b.v.SetDefault(rlKey, 1*time.Second)
 	rl := b.v.GetDuration(rlKey)
 
-	cmd := &Command{
+	cmd := &chatcmd.Command{
 		Function:  fn,
 		Ratelimit: rate.NewLimiter(rate.Every(rl), 1),
 	}
@@ -177,17 +178,42 @@ func (b *Bot) IsTrusted(chat *owot.MessageChat) bool {
 	return ok && b.v.GetBool("ratelimits.trusted_exempt")
 }
 
+type botContext struct {
+	b *Bot
+	w *world.World
+	c *owot.MessageChat
+}
+
+func (bc *botContext) Chat(message string) {
+	bc.w.Chat(message, bc.c.Location)
+}
+
+func (bc *botContext) IsTrusted(username string) bool {
+	// probably should refactor *Bot.IsTrusted ....
+	return bc.b.IsTrusted(&owot.MessageChat{RealUsername: username})
+}
+
+func (bc *botContext) Viper() *viper.Viper {
+	return bc.b.v
+}
+
 func (b *Bot) handleCommand(w *world.World, chat *owot.MessageChat) {
 	fields := strings.Fields(chat.Message)
 	if len(fields) < 2 {
 		return
 	}
 
+	chatCtx := &botContext{
+		b: b,
+		w: w,
+		c: chat,
+	}
+
 	commandName := fields[1]
 	command, ok := b.cmds[commandName]
 	if ok {
 		if command.Ratelimit.AllowN(time.Now(), 1) || b.IsTrusted(chat) {
-			command.Function(b, w, chat)
+			command.Function(chatCtx, chat)
 		}
 	}
 }
