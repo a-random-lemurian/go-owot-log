@@ -3,25 +3,42 @@ package lastseen
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"strings"
 
-	"github.com/a-random-lemurian/go-owot"
 	"github.com/a-random-lemurian/go-owot-log/bot/chatcmd"
+
+	"github.com/a-random-lemurian/go-owot"
+
+	slogGorm "github.com/orandin/slog-gorm"
+	slogzap "github.com/samber/slog-zap/v2"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
 type Lastseen struct {
-	db LastseenDB
+	db  LastseenDB
+	log *zap.Logger
 }
 
 // getLsDB: get lastseen database
-func getLsDB(v *viper.Viper) (LastseenDB, error) {
+func getLsDB(v *viper.Viper, log *zap.Logger) (LastseenDB, error) {
 	if v.GetString("database.type") != "sqlite" {
 		return nil, errors.New("unsupported database")
 	}
-	sqlite, err := gorm.Open(sqlite.Open(v.GetString("database.sqlite.dsn")))
+
+	slogHandler := slogzap.Option{
+		Level:  slog.LevelDebug,
+		Logger: log,
+	}.NewZapHandler()
+
+	gormLogger := slogGorm.New(
+		slogGorm.WithHandler(slogHandler), // pass the handler
+	)
+
+	sqlite, err := gorm.Open(sqlite.Open(v.GetString("database.sqlite.dsn")), &gorm.Config{Logger: gormLogger})
 	if err != nil {
 		return nil, err
 	}
@@ -29,12 +46,14 @@ func getLsDB(v *viper.Viper) (LastseenDB, error) {
 	return db, nil
 }
 
-func NewLastseen(parentV *viper.Viper) (*Lastseen, error) {
+func NewLastseen(parentV *viper.Viper, log *zap.Logger) (*Lastseen, error) {
 	v := parentV.Sub("lastseen")
 
-	ls := &Lastseen{}
+	ls := &Lastseen{
+		log: log,
+	}
 
-	db, err := getLsDB(v)
+	db, err := getLsDB(v, ls.log)
 	if err != nil {
 		return nil, err
 	}

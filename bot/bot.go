@@ -52,7 +52,7 @@ func (b *Bot) initCommands() error {
 	msgCount.RegisterCommands(b)
 	b.msgCount = msgCount
 
-	lastseenService, err := lastseen.NewLastseen(b.v)
+	lastseenService, err := lastseen.NewLastseen(b.v, b.log)
 	if err != nil {
 		return err
 	}
@@ -149,7 +149,8 @@ func (b *Bot) RegisterCommand(name string, fn chatcmd.CommandFunction) {
 		Ratelimit: rate.NewLimiter(rate.Every(rl), 1),
 	}
 
-	b.log.Info(fmt.Sprintf("Registering new command %s, ratelimit 1 per %s", name, rl), zap.Duration("ratelimit", rl))
+	b.log.Info(fmt.Sprintf("Registering new command %s, ratelimit 1 per %s", name, rl),
+		zap.Duration("ratelimit", rl), zap.String("commandName", name))
 
 	b.cmds[name] = cmd
 }

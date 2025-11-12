@@ -39,8 +39,15 @@ require (
 )
 
 require (
+	github.com/samber/lo v1.47.0 // indirect
+	github.com/samber/slog-common v0.18.1 // indirect
+)
+
+require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/mattn/go-sqlite3 v1.14.22 // indirect
+	github.com/orandin/slog-gorm v1.4.0
+	github.com/samber/slog-zap/v2 v2.6.2
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 )
