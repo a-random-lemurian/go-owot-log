@@ -1,4 +1,4 @@
-package bot
+package world
 
 import (
 	"fmt"
@@ -10,11 +10,17 @@ import (
 	"go.uber.org/zap"
 )
 
+type RawSink interface {
+	HandleRaw(*World, []byte)
+}
+
 type World struct {
 	owotConn *owot.OwotConn
 	url      string
 	appLog   *zap.Logger
-	bot      *Bot
+	nickname string
+	color    string
+	rawSink  RawSink
 
 	AcceptGlobal bool
 }
@@ -39,7 +45,7 @@ func CreateOWOTUrl(worldName string, hide bool) string {
 	return url.String()
 }
 
-func (b *Bot) CreateWorld(worldName string, log *zap.Logger, acceptGlobal bool) (*World, error) {
+func CreateWorld(worldName string, log *zap.Logger, rawSink RawSink, acceptGlobal bool) (*World, error) {
 	url := CreateOWOTUrl(worldName, true)
 	conn, err := owot.Dial(url, nil)
 	if err != nil {
@@ -50,11 +56,11 @@ func (b *Bot) CreateWorld(worldName string, log *zap.Logger, acceptGlobal bool) 
 		owotConn:     conn,
 		url:          url,
 		appLog:       log,
-		bot:          b,
 		AcceptGlobal: acceptGlobal,
+		rawSink: rawSink,
 	}
 
-	conn.HandleRaw = world.HandleRaw
+	conn.HandleRaw = world.handleRaw
 
 	world.appLog.Info("Created world",
 		zap.String("worldName", worldName),
@@ -65,8 +71,12 @@ func (b *Bot) CreateWorld(worldName string, log *zap.Logger, acceptGlobal bool) 
 	return world, nil
 }
 
-func (w *World) HandleRaw(data []byte) {
-	w.bot.handleRaw(w, data)
+func (w *World) handleRaw(data []byte) {
+	w.rawSink.HandleRaw(w, data)
+}
+
+func (w *World) GetURL() string {
+	return w.url
 }
 
 func (w *World) Run() error {
@@ -78,5 +88,5 @@ func (w *World) Chat(message string, location string) error {
 	msgMeta := map[string]any{}
 	msgMeta["version"] = fmt.Sprintf("go-owot-log version %s", versioninfo.Short())
 	msgMeta["sent-date"] = time.Now().UTC().UnixMilli()
-	return w.owotConn.Chat(w.bot.v.GetString("chat.nickname"), message, location, w.bot.v.GetString("chat.color"), msgMeta)
+	return w.owotConn.Chat(w.nickname, message, location, w.color, msgMeta)
 }

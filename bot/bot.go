@@ -9,13 +9,14 @@ import (
 	"time"
 
 	"github.com/a-random-lemurian/go-owot"
+	"github.com/a-random-lemurian/go-owot-log/bot/world"
 	"github.com/a-random-lemurian/go-owot-log/internal/types"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"golang.org/x/time/rate"
 )
 
-type CommandFunction func(*Bot, *World, *owot.MessageChat)
+type CommandFunction func(*Bot, *world.World, *owot.MessageChat)
 
 type Command struct {
 	Function  CommandFunction
@@ -103,7 +104,7 @@ func (b *Bot) Run() error {
 			log.Info("Creating world", zap.String("worldName", worldName))
 			acceptsGlobal := (worldName == globalReceiver)
 			for {
-				world, err := b.CreateWorld(worldName, log, acceptsGlobal)
+				world, err := world.CreateWorld(worldName, log, b, acceptsGlobal)
 				if err != nil {
 					log.Error("Cannot create World", zap.String("worldName", worldName), zap.Error(err))
 					time.Sleep(1 * time.Second)
@@ -123,7 +124,7 @@ func (b *Bot) Run() error {
 	return nil
 }
 
-func (b *Bot) handleRaw(w *World, data []byte) {
+func (b *Bot) HandleRaw(w *world.World, data []byte) {
 	type partial struct {
 		Kind     string `json:"kind"`
 		Location string `json:"location"`
@@ -131,7 +132,7 @@ func (b *Bot) handleRaw(w *World, data []byte) {
 	var kind partial
 	err := json.Unmarshal(data, &kind)
 	if err != nil {
-		w.appLog.Error("Failed to parse incoming message", zap.Error(err), zap.ByteString("rawMessage", data))
+		b.log.Error("Failed to parse incoming message", zap.Error(err), zap.ByteString("rawMessage", data))
 		return
 	}
 
@@ -148,7 +149,7 @@ func (b *Bot) handleRaw(w *World, data []byte) {
 	b.handleChat(w, data)
 }
 
-func (b *Bot) handleChat(w *World, data []byte) {
+func (b *Bot) handleChat(w *world.World, data []byte) {
 	time := time.Now()
 
 	var chat owot.MessageChat
@@ -162,9 +163,9 @@ func (b *Bot) handleChat(w *World, data []byte) {
 		b.handleCommand(w, &chat)
 	}
 
-	err := b.db.AddMessage(&types.Message{Origin: w.url, WebsocketMessage: data, Time: time})
+	err := b.db.AddMessage(&types.Message{Origin: w.GetURL(), WebsocketMessage: data, Time: time})
 	if err != nil {
-		w.appLog.Error("Failed to insert message into database", zap.Error(err), zap.ByteString("rawMessage", data))
+		b.log.Error("Failed to insert message into database", zap.Error(err), zap.ByteString("rawMessage", data))
 	}
 }
 
@@ -173,7 +174,7 @@ func (b *Bot) IsTrusted(chat *owot.MessageChat) bool {
 	return ok && b.v.GetBool("ratelimits.trusted_exempt")
 }
 
-func (b *Bot) handleCommand(w *World, chat *owot.MessageChat) {
+func (b *Bot) handleCommand(w *world.World, chat *owot.MessageChat) {
 	fields := strings.Fields(chat.Message)
 	if len(fields) < 2 {
 		return
