@@ -1,0 +1,130 @@
+package lastseen
+
+import (
+	"errors"
+	"fmt"
+	"strings"
+
+	"github.com/a-random-lemurian/go-owot"
+	"github.com/a-random-lemurian/go-owot-log/bot/chatcmd"
+	"github.com/spf13/viper"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+)
+
+type Lastseen struct {
+	db LastseenDB
+}
+
+// getLsDB: get lastseen database
+func getLsDB(v *viper.Viper) (LastseenDB, error) {
+	if v.GetString("database.type") != "sqlite" {
+		return nil, errors.New("unsupported database")
+	}
+	sqlite, err := gorm.Open(sqlite.Open(v.GetString("database.sqlite.dsn")))
+	if err != nil {
+		return nil, err
+	}
+	db := NewGormLastseenDB(sqlite)
+	return db, nil
+}
+
+func NewLastseen(parentV *viper.Viper) (*Lastseen, error) {
+	v := parentV.Sub("lastseen")
+
+	ls := &Lastseen{}
+
+	db, err := getLsDB(v)
+	if err != nil {
+		return nil, err
+	}
+	ls.db = db
+
+	return ls, nil
+}
+
+// Ingest a new chat message to update the last seen times.
+func (l *Lastseen) IngestMessage(chat *owot.MessageChat) {
+	l.db.SetLastseen(chat.RealUsername, chat.Date.Time())
+}
+
+// Consent should be "yes" or "no"
+func (l *Lastseen) validateConsent(s string) (bool, error) {
+	switch s {
+	case "yes":
+		return true, nil
+	case "no":
+		return false, nil
+	default:
+		return false, errors.New("invalid consent setting, use yes or no")
+	}
+}
+
+func (l *Lastseen) cmdLastseen(chatCtx chatcmd.Context, c *owot.MessageChat) {
+	tokens := strings.Fields(c.Message)
+	target := tokens[2]
+	consent := l.db.Consents(target)
+	if !consent {
+		chatCtx.Chat(fmt.Sprintf("%s has opted out", target))
+		return
+	}
+	lastseen, err := l.db.GetLastseen(target)
+	lastseenTimeString := lastseen.UTC().Format("2006-01-02 15:04:05.000") + " UTC"
+	if err != nil {
+		chatCtx.Chat(fmt.Sprintf("%s not found", target))
+		return
+	}
+	chatCtx.Chat(fmt.Sprintf("%s was last seen at %s", target, lastseenTimeString))
+}
+
+func (l *Lastseen) cmdConsent(chatCtx chatcmd.Context, c *owot.MessageChat) {
+	tokens := strings.Fields(c.Message)
+
+	consent, err := l.validateConsent(tokens[2])
+	if err != nil {
+		chatCtx.Chat(fmt.Sprintf("error: %s", err))
+		return
+	}
+
+	// 1. user opting in and out
+	if len(tokens) < 4 {
+		err := l.db.SetConsent(c.RealUsername, consent)
+		if err != nil {
+			chatCtx.Chat("there was a database error. sorry")
+			return
+		}
+		if consent {
+			chatCtx.Chat("You have opted back in.")
+		} else {
+			chatCtx.Chat("You have opted out.")
+		}
+		return
+	}
+
+	// 2. forcefully optin/out someone (admin)
+	if !chatCtx.IsTrusted(c.RealUsername) {
+		return
+	}
+	if len(tokens) < 4 {
+		chatCtx.Chat("user to change consent for unspecified")
+		return
+	}
+
+	l.adminChangeConsent(chatCtx, consent, tokens[3])
+}
+
+func (l *Lastseen) adminChangeConsent(chatCtx chatcmd.Context, consent bool, target string) error {
+	err := l.db.SetConsent(target, consent)
+	if err != nil {
+		chatCtx.Chat("there was a database error. sorry")
+		return err
+	}
+	chatCtx.Chat(fmt.Sprintf("changed optin/out of %s to %t", target, consent))
+	return nil
+}
+
+func (l *Lastseen) AttachCommands(b chatcmd.CommandRegistry) error {
+	b.RegisterCommand("lastseen", l.cmdLastseen)
+	b.RegisterCommand("lastseen-consent", l.cmdConsent)
+	return nil
+}

@@ -48,6 +48,7 @@ func (b *Bot) handleChat(w *world.World, data []byte) {
 		b.log.Error("failed to parse message", zap.Error(err), zap.ByteString("rawData", data))
 	}
 
+	b.lastseen.IngestMessage(&chat)
 	b.msgCount.IngestMessage(&chat)
 
 	shouldReply := b.v.GetBool(fmt.Sprintf("chat.location.%s.enabled", chat.Location))

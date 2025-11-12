@@ -8,6 +8,7 @@ import (
 	"github.com/a-random-lemurian/go-owot-log/bot/chatcmd"
 	"github.com/a-random-lemurian/go-owot-log/bot/chsize"
 	"github.com/a-random-lemurian/go-owot-log/bot/cmdcore"
+	"github.com/a-random-lemurian/go-owot-log/bot/lastseen"
 	"github.com/a-random-lemurian/go-owot-log/bot/world"
 
 	"github.com/a-random-lemurian/go-owot"
@@ -27,6 +28,7 @@ type Bot struct {
 	cmdsMu    sync.Mutex
 	msgCount  *chsize.MsgCounter
 	trustedUsers map[string]any
+	lastseen     *lastseen.Lastseen
 }
 
 func NewBot(v *viper.Viper) (*Bot, error) {
@@ -43,16 +45,25 @@ func (b *Bot) getDatabase() error {
 	return nil
 }
 
-func (b *Bot) initCommands() {
+func (b *Bot) initCommands() error {
 	b.cmdPrefix = b.v.GetString("command_prefix")
 
 	msgCount := chsize.NewMsgCounter()
 	msgCount.RegisterCommands(b)
 	b.msgCount = msgCount
 
+	lastseenService, err := lastseen.NewLastseen(b.v)
+	if err != nil {
+		return err
+	}
+	b.lastseen = lastseenService
+	b.lastseen.AttachCommands(b)
+
 	b.RegisterCommand("uptime", cmdcore.Uptime)
 	b.RegisterCommand("version", cmdcore.Version)
 	b.RegisterCommand("help", cmdcore.Help)
+
+	return nil
 }
 
 func (b *Bot) initWorlds(wg *sync.WaitGroup) {
@@ -85,7 +96,7 @@ func (b *Bot) initWorlds(wg *sync.WaitGroup) {
 func (b *Bot) initMiscConfig() {
 	b.v.SetDefault("chat.location.page.enabled", true)
 	b.v.SetDefault("chat.location.global.enabled", true)
-	
+
 	trusted := b.v.GetStringSlice("users.trusted")
 	for _, v := range trusted {
 		b.trustedUsers[v] = 1
@@ -104,11 +115,14 @@ func (b *Bot) Run() error {
 
 	log.Info("Hi, good to see you")
 	defer log.Info("Goodbye")
-	
+
 	wg := sync.WaitGroup{}
 
+	if err := b.initCommands(); err != nil {
+		return err
+	}
+
 	b.initMiscConfig()
-	b.initCommands()
 	b.initWorlds(&wg)
 
 	wg.Wait()
