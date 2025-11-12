@@ -7,5 +7,6 @@ import (
 )
 
 func Help(chatCtx chatcmd.Context, c *owot.MessageChat) {
-	chatCtx.Chat("go-owot-log is a bot by Lemuria, the successor to owot_ws_log! / ch size - size of chatlogs / other cmds: help, uptime, version")
+	// TODO: maybe require commands to include help messages when registering themselves
+	chatCtx.Chat("go-owot-log is a bot by Lemuria, the successor to owot_ws_log! / ch size - size of chatlogs / other cmds: help, uptime, version, lastseen, lastseen-consent / to opt out of lastseen: 'ch lastseen-consent no'")
 }
