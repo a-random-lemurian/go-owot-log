@@ -83,6 +83,8 @@ func (b *Bot) Run() error {
 	wg := sync.WaitGroup{}
 
 	b.cmdPrefix = b.v.GetString("command_prefix")
+	b.v.SetDefault("chat.location.page.enabled", true)
+	b.v.SetDefault("chat.location.global.enabled", true)
 
 	trusted := b.v.GetStringSlice("users.trusted")
 	for _, v := range trusted {
@@ -159,7 +161,8 @@ func (b *Bot) handleChat(w *world.World, data []byte) {
 
 	b.msgCount.Add(1)
 
-	if strings.HasPrefix(chat.Message, b.cmdPrefix) {
+	shouldReply := b.v.GetBool(fmt.Sprintf("chat.location.%s.enabled", chat.Location))
+	if strings.HasPrefix(chat.Message, b.cmdPrefix) && shouldReply {
 		b.handleCommand(w, &chat)
 	}
 
