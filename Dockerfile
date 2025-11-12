@@ -13,7 +13,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     go build -v -trimpath -ldflags="-s -w" -o /app/owot-log ./cmd/owot-log
 
 # Stage 2: scratch runtime (includes CA certs from builder)
-FROM scratch
+FROM ubuntu:24.04
 COPY --from=builder /app/owot-log /app/owot-log
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 WORKDIR /app
