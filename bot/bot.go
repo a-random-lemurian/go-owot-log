@@ -39,7 +39,7 @@ func NewBot(v *viper.Viper) (*Bot, error) {
 }
 
 func (b *Bot) getDatabase() error {
-	database, err := CreatePlainTextFileDatabase(b.v)
+	database, err := CreatePlainTextFileDatabase(b.v, b.log)
 	if err != nil {
 		b.log.Error("Cannot create PlainTextFileDatabase", zap.Error(err))
 		return err

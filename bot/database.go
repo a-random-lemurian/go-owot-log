@@ -1,6 +1,8 @@
 package bot
 
 import (
+	"fmt"
+
 	"github.com/a-random-lemurian/go-owot-log/internal/types"
 
 	"github.com/spf13/viper"
@@ -16,9 +18,12 @@ type PlaintextFileDatabase struct {
 	owotLog *zap.Logger
 }
 
-func CreatePlainTextFileDatabase(v *viper.Viper) (*PlaintextFileDatabase, error) {
+func CreatePlainTextFileDatabase(v *viper.Viper, parentLog *zap.Logger) (*PlaintextFileDatabase, error) {
+	log := parentLog.Named("plaintextdb")
+	file := "owot.log"
+	log.Info(fmt.Sprintf("Creating plaintext file database at %s", file), zap.String("filename", file))
 	db := PlaintextFileDatabase{}
-	db.owotLog = GetZapLogger(v, "owot.log")
+	db.owotLog = GetZapLogger(v, file).Named("zapdb")
 	return &db, nil
 }
 
