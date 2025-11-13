@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/a-random-lemurian/go-owot-log/bot/botprom"
 	"github.com/a-random-lemurian/go-owot-log/bot/chatcmd"
 	"github.com/a-random-lemurian/go-owot-log/bot/chsize"
 	"github.com/a-random-lemurian/go-owot-log/bot/cmdcore"
@@ -29,6 +30,7 @@ type Bot struct {
 	msgCount     *chsize.MsgCounter
 	trustedUsers map[string]any
 	lastseen     *lastseen.Lastseen
+	botprom *botprom.BotPrometheus
 }
 
 func NewBot(v *viper.Viper) (*Bot, error) {
@@ -103,6 +105,18 @@ func (b *Bot) initMiscConfig() {
 	}
 }
 
+func (b *Bot) initPrometheus() error {
+	if !b.v.IsSet("botprom.listen_addr") {
+		return fmt.Errorf("botprom.listen_addr unset")
+	}
+	bp, err := botprom.NewBotPrometheus(b.v.GetString("botprom.listen_addr"))
+	if err != nil {
+		return err
+	}
+	b.botprom = bp
+	return nil
+}
+
 func (b *Bot) Run() error {
 	b.startTime = time.Now()
 
@@ -121,9 +135,18 @@ func (b *Bot) Run() error {
 	if err := b.initCommands(); err != nil {
 		return err
 	}
+	if err := b.initPrometheus(); err != nil {
+		return err
+	}
 
 	b.initMiscConfig()
 	b.initWorlds(&wg)
+
+	wg.Add(1)
+	go func () {
+		defer wg.Done()
+		b.botprom.Run()
+	}()
 
 	wg.Wait()
 

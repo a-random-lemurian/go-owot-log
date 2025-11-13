@@ -50,6 +50,7 @@ func (b *Bot) handleChat(w *world.World, data []byte) {
 
 	b.lastseen.IngestMessage(&chat)
 	b.msgCount.IngestMessage(&chat)
+	b.botprom.IngestMessage(&chat)
 
 	shouldReply := b.v.GetBool(fmt.Sprintf("chat.location.%s.enabled", chat.Location))
 	if strings.HasPrefix(chat.Message, b.cmdPrefix) && shouldReply {

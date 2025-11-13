@@ -14,6 +14,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 
 # Stage 2: scratch runtime (includes CA certs from builder)
 FROM ubuntu:24.04
+EXPOSE 27321
 COPY --from=builder /app/owot-log /app/owot-log
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 WORKDIR /app
