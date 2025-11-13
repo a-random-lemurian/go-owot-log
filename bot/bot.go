@@ -129,8 +129,8 @@ func (b *Bot) Run() error {
 		return errors.Wrap(err, "initializing message database")
 	}
 
-	log.Info("Hi, good to see you")
-	defer log.Info("Goodbye")
+	b.log.Info("Hi, good to see you")
+	defer b.log.Info("Goodbye")
 
 	wg := sync.WaitGroup{}
 
