@@ -31,7 +31,7 @@ func getLsDB(v *viper.Viper, log *zap.Logger) (LastseenDB, error) {
 
 	slogHandler := slogzap.Option{
 		Level:  slog.LevelDebug,
-		Logger: log,
+		Logger: log.Named("database"),
 	}.NewZapHandler()
 
 	gormLogger := slogGorm.New(
@@ -49,8 +49,9 @@ func getLsDB(v *viper.Viper, log *zap.Logger) (LastseenDB, error) {
 func NewLastseen(parentV *viper.Viper, log *zap.Logger) (*Lastseen, error) {
 	v := parentV.Sub("lastseen")
 
+	sublog := log.Named("lastseen")
 	ls := &Lastseen{
-		log: log,
+		log: sublog,
 	}
 
 	db, err := getLsDB(v, ls.log)
@@ -58,6 +59,8 @@ func NewLastseen(parentV *viper.Viper, log *zap.Logger) (*Lastseen, error) {
 		return nil, errors.Wrap(err, "initializing lastseen")
 	}
 	ls.db = db
+
+	sublog.Info("Initialized lastseen")
 
 	return ls, nil
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.uber.org/zap"
 )
 
 const namespace = "owot_log"
@@ -25,12 +26,14 @@ type BotPrometheus struct {
 	httpServer *http.Server
 	httpMux    *http.ServeMux
 	listen     string
+	log        *zap.Logger
 }
 
-func NewBotPrometheus(listen string) (*BotPrometheus, error) {
+func NewBotPrometheus(listen string, log *zap.Logger) (*BotPrometheus, error) {
 	bp := &BotPrometheus{
 		metrics: prometheus.NewRegistry(),
 		listen: listen,
+		log: log.Named("botprom"),
 	}
 
 	bp.metrics.MustRegister(
@@ -59,6 +62,7 @@ func NewBotPrometheus(listen string) (*BotPrometheus, error) {
 }
 
 func (bp *BotPrometheus) Run() error {
+	bp.log.Info("Running Prometheus HTTP server")
 	bp.httpServer.Addr = bp.listen
 	return bp.httpServer.ListenAndServe()
 }

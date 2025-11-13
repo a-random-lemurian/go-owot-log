@@ -49,6 +49,7 @@ func (b *Bot) getDatabase() error {
 }
 
 func (b *Bot) initCommands() error {
+	b.log.Info("Initializing commands")
 	b.cmdPrefix = b.v.GetString("command_prefix")
 
 	msgCount := chsize.NewMsgCounter()
@@ -110,7 +111,7 @@ func (b *Bot) initPrometheus() error {
 	if !b.v.IsSet("botprom.listen_addr") {
 		return fmt.Errorf("botprom.listen_addr unset")
 	}
-	bp, err := botprom.NewBotPrometheus(b.v.GetString("botprom.listen_addr"))
+	bp, err := botprom.NewBotPrometheus(b.v.GetString("botprom.listen_addr"), b.log)
 	if err != nil {
 		return errors.Wrap(err, "creating prometheus object")
 	}
@@ -122,7 +123,7 @@ func (b *Bot) Run() error {
 	b.startTime = time.Now()
 
 	log := GetZapLogger(b.v, "application.log")
-	b.log = log
+	b.log = log.Named("bot")
 
 	if err := b.getDatabase(); err != nil {
 		return errors.Wrap(err, "initializing message database")
@@ -146,7 +147,8 @@ func (b *Bot) Run() error {
 	wg.Add(1)
 	go func () {
 		defer wg.Done()
-		b.botprom.Run()
+		err := b.botprom.Run()
+		log.Error("prometheus died", zap.Error(err))
 	}()
 
 	wg.Wait()
