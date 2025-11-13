@@ -73,6 +73,7 @@ func (b *Bot) initCommands() error {
 func (b *Bot) initWorlds(wg *sync.WaitGroup) {
 	worlds := b.v.GetStringSlice("worlds")
 	globalReceiver := b.v.GetString("global_receiver")
+	nickname := b.v.GetString("chat.nickname")
 
 	for _, worldName := range worlds {
 		wg.Add(1)
@@ -81,7 +82,7 @@ func (b *Bot) initWorlds(wg *sync.WaitGroup) {
 			b.log.Info("Creating world", zap.String("worldName", worldName))
 			acceptsGlobal := (worldName == globalReceiver)
 			for {
-				world, err := world.CreateWorld(worldName, b.log, b, acceptsGlobal)
+				world, err := world.CreateWorld(worldName, b.log, b, acceptsGlobal, nickname)
 				if err != nil {
 					b.log.Error("Cannot create World", zap.String("worldName", worldName), zap.Error(err))
 					time.Sleep(1 * time.Second)

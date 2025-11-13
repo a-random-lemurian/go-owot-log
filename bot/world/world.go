@@ -46,7 +46,7 @@ func CreateOWOTUrl(worldName string, hide bool) string {
 	return url.String()
 }
 
-func CreateWorld(worldName string, log *zap.Logger, rawSink RawSink, acceptGlobal bool) (*World, error) {
+func CreateWorld(worldName string, log *zap.Logger, rawSink RawSink, acceptGlobal bool, nickname string) (*World, error) {
 	url := CreateOWOTUrl(worldName, true)
 	conn, err := owot.Dial(url, nil)
 	if err != nil {
@@ -59,6 +59,7 @@ func CreateWorld(worldName string, log *zap.Logger, rawSink RawSink, acceptGloba
 		appLog:       log,
 		AcceptGlobal: acceptGlobal,
 		rawSink:      rawSink,
+		nickname:     nickname,
 	}
 
 	conn.HandleRaw = world.handleRaw
