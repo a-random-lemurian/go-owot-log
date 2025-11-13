@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/a-random-lemurian/go-owot"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"

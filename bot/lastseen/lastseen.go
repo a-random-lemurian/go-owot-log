@@ -1,7 +1,6 @@
 package lastseen
 
 import (
-	"errors"
 	"fmt"
 	"log/slog"
 	"strings"
@@ -13,6 +12,7 @@ import (
 	slogGorm "github.com/orandin/slog-gorm"
 	slogzap "github.com/samber/slog-zap/v2"
 	"github.com/spf13/viper"
+	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -40,7 +40,7 @@ func getLsDB(v *viper.Viper, log *zap.Logger) (LastseenDB, error) {
 
 	sqlite, err := gorm.Open(sqlite.Open(v.GetString("database.sqlite.dsn")), &gorm.Config{Logger: gormLogger})
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "initializing database")
 	}
 	db := NewGormLastseenDB(sqlite)
 	return db, nil
@@ -55,7 +55,7 @@ func NewLastseen(parentV *viper.Viper, log *zap.Logger) (*Lastseen, error) {
 
 	db, err := getLsDB(v, ls.log)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "initializing lastseen")
 	}
 	ls.db = db
 

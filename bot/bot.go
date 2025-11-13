@@ -13,7 +13,8 @@ import (
 	"github.com/a-random-lemurian/go-owot-log/bot/world"
 
 	"github.com/a-random-lemurian/go-owot"
-
+	
+	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"golang.org/x/time/rate"
@@ -56,7 +57,7 @@ func (b *Bot) initCommands() error {
 
 	lastseenService, err := lastseen.NewLastseen(b.v, b.log)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "initializing lastseen")
 	}
 	b.lastseen = lastseenService
 	b.lastseen.AttachCommands(b)
@@ -111,7 +112,7 @@ func (b *Bot) initPrometheus() error {
 	}
 	bp, err := botprom.NewBotPrometheus(b.v.GetString("botprom.listen_addr"))
 	if err != nil {
-		return err
+		return errors.Wrap(err, "creating prometheus object")
 	}
 	b.botprom = bp
 	return nil
@@ -124,7 +125,7 @@ func (b *Bot) Run() error {
 	b.log = log
 
 	if err := b.getDatabase(); err != nil {
-		return err
+		return errors.Wrap(err, "initializing message database")
 	}
 
 	log.Info("Hi, good to see you")
@@ -133,10 +134,10 @@ func (b *Bot) Run() error {
 	wg := sync.WaitGroup{}
 
 	if err := b.initCommands(); err != nil {
-		return err
+		return errors.Wrap(err, "initializing commands")
 	}
 	if err := b.initPrometheus(); err != nil {
-		return err
+		return errors.Wrap(err, "initializing prometheus")
 	}
 
 	b.initMiscConfig()
