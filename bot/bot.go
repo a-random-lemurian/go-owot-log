@@ -32,6 +32,11 @@ type Bot struct {
 	trustedUsers map[string]any
 	lastseen     *lastseen.Lastseen
 	botprom *botprom.BotPrometheus
+	messageSinks []MessageSink
+}
+
+type MessageSink interface {
+	IngestMessage(*owot.MessageChat)
 }
 
 func NewBot(v *viper.Viper) (*Bot, error) {
@@ -55,6 +60,7 @@ func (b *Bot) initCommands() error {
 	msgCount := chsize.NewMsgCounter()
 	msgCount.RegisterCommands(b)
 	b.msgCount = msgCount
+	b.RegisterMessageSink(b.msgCount)
 
 	lastseenService, err := lastseen.NewLastseen(b.v, b.log)
 	if err != nil {
@@ -62,6 +68,7 @@ func (b *Bot) initCommands() error {
 	}
 	b.lastseen = lastseenService
 	b.lastseen.AttachCommands(b)
+	b.RegisterMessageSink(b.lastseen)
 
 	b.RegisterCommand("uptime", cmdcore.Uptime)
 	b.RegisterCommand("version", cmdcore.Version)
@@ -117,6 +124,9 @@ func (b *Bot) initPrometheus() error {
 		return errors.Wrap(err, "creating prometheus object")
 	}
 	b.botprom = bp
+
+	b.RegisterMessageSink(bp)
+
 	return nil
 }
 
@@ -160,6 +170,15 @@ func (b *Bot) Run() error {
 func (b *Bot) IsTrusted(chat *owot.MessageChat) bool {
 	_, ok := b.trustedUsers[chat.RealUsername]
 	return ok && b.v.GetBool("ratelimits.trusted_exempt")
+}
+
+func (b *Bot) RegisterMessageSink(sink MessageSink) {
+	b.messageSinks = append(b.messageSinks, sink)
+	b.log.Named("msgsink").Info(
+		fmt.Sprintf("Registering new message sink:  %+T (%p)", sink, &sink),
+		zap.String("sinkType", fmt.Sprintf("%+T", sink)),
+		zap.String("pointer", fmt.Sprintf("%p", sink)),
+	)
 }
 
 func (b *Bot) RegisterCommand(name string, fn chatcmd.CommandFunction) {
