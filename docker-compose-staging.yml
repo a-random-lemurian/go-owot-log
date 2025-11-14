@@ -17,3 +17,12 @@ services:
       options:
         max-size: "50m"     # max size per log file
         max-file: "5"       # number of rotated files to keep
+    networks:
+      - prometheus-staging
+    labels:
+      prometheus.scrape: "true"
+      prometheus.port: "27321"
+
+networks:
+  prometheus-staging:
+    external: true
