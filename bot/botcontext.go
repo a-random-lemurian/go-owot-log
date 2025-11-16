@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -19,7 +20,12 @@ type botContext struct {
 }
 
 func (bc *botContext) Chat(message string) {
-	bc.w.Chat(message, bc.c.Location)
+	final := ""
+	if bc.c.PrivateMessage != nil && *bc.c.PrivateMessage == owot.PMTToMe {
+		final += fmt.Sprintf("/tell %s ", bc.c.Id) 
+	}
+	final += message
+	bc.w.Chat(final, bc.c.Location.String())
 }
 
 func (bc *botContext) IsTrusted(username string) bool {
