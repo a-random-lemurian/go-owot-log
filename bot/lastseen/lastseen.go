@@ -122,14 +122,22 @@ func (l *Lastseen) cmdConsent(chatCtx chatcmd.Context, c *owot.MessageChat) {
 	if len(tokens) < 4 {
 		err := l.db.SetConsent(c.RealUsername, consent)
 		if err != nil {
+			l.log.Error("database error while setting consent", zap.Error(err))
 			chatCtx.Chat("there was a database error. sorry")
 			return
 		}
+
 		if consent {
 			chatCtx.Chat("You have opted back in.")
 		} else {
 			chatCtx.Chat("You have opted out.")
 		}
+
+		l.log.Info("user changed consent setting",
+			zap.String("realUsername", c.RealUsername),
+			zap.Bool("consent", consent),
+		)
+
 		return
 	}
 
@@ -137,6 +145,7 @@ func (l *Lastseen) cmdConsent(chatCtx chatcmd.Context, c *owot.MessageChat) {
 	if !chatCtx.IsTrusted(c.RealUsername) {
 		return
 	}
+
 	if len(tokens) < 4 {
 		chatCtx.Chat("user to change consent for unspecified")
 		return
