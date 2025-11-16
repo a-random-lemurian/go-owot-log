@@ -20,3 +20,10 @@ docker save lemuriaph/go-owot-log-main:latest | pv | ssh lemuria@vps1 docker loa
 ```
 
 (This command will only work for Lemuria; replace the ssh command with your own server)
+
+## Versions
+
+Version numbers aren't really necessary as this is rolling-release and code should be tested
+and working before going to master, but when I switched to stdout logging with fluentd to
+become 12-factor in commit `a83c81b783b66ced4ec3afb5435fbd81ac7d235e`, there would need to
+be some transition work done.
