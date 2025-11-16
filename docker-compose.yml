@@ -13,16 +13,23 @@ services:
       - ./data:/app/data
       - ./config.yml:/app/config.yml
     logging:
-      driver: "json-file"
+      driver: "fluentd"
       options:
-        max-size: "50m"     # max size per log file
-        max-file: "5"       # number of rotated files to keep
+        fluentd-address: localhost:24224
+        tag: go-owot-log.staging
+        env: "ENV"
+        labels: "app_name"
     networks:
-      - prometheus
+      - fluentd-staging
+      - prometheus-staging
     labels:
+      app_name: go-owot-log
       prometheus.scrape: "true"
       prometheus.port: "27321"
 
 networks:
-  prometheus:
+  prometheus-staging:
     external: true
+  fluentd-staging:
+    external: true
+
