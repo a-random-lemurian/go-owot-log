@@ -14,6 +14,7 @@ import (
 
 	"github.com/a-random-lemurian/go-owot"
 	
+	"github.com/carlmjohnson/versioninfo"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -140,8 +141,10 @@ func (b *Bot) Run() error {
 		return errors.Wrap(err, "initializing message database")
 	}
 
-	b.log.Info("Hi, good to see you")
-	defer b.log.Info("Goodbye")
+	b.log.Info("Hi, good to see you", zap.String("version", versioninfo.Short()), zap.Time("startTime", b.startTime))
+	defer func() {
+		b.log.Info("Goodbye", zap.Duration("runTime", time.Since(b.startTime)))
+	}()
 
 	wg := sync.WaitGroup{}
 
