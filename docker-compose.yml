@@ -20,16 +20,16 @@ services:
         env: "ENV"
         labels: "app_name"
     networks:
-      - fluentd-staging
-      - prometheus-staging
+      - fluentd
+      - prometheus
     labels:
       app_name: go-owot-log
       prometheus.scrape: "true"
       prometheus.port: "27321"
 
 networks:
-  prometheus-staging:
+  prometheus:
     external: true
-  fluentd-staging:
+  fluentd:
     external: true
 
