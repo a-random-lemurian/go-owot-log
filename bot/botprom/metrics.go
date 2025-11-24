@@ -70,3 +70,7 @@ func (bp *BotPrometheus) Run() error {
 func (bp *BotPrometheus) IngestMessage(c *owot.MessageChat) {
 	messagesReceived.Inc()
 }
+
+func (bp *BotPrometheus) MustRegister(cs ...prometheus.Collector) {
+	bp.metrics.MustRegister(cs...)
+}
