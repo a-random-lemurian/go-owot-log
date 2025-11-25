@@ -153,7 +153,9 @@ func (b *Bot) initPrometheus() error {
 	b.botprom = bp
 
 	b.RegisterMessageSink(bp)
+
 	bp.MustRegister(getPrometheusRegistry())
+	bp.MustRegister(b.initChatsizeMetric())
 
 	return nil
 }

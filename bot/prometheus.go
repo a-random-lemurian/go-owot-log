@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"github.com/a-random-lemurian/go-owot-log/internal/util"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -23,6 +24,23 @@ var (
 		Help:      "The total number of worlds being actively logged by the bot",
 	})
 )
+
+func (b *Bot) initChatsizeMetric() prometheus.Collector {
+	chatSize := prometheus.NewGaugeFunc(prometheus.GaugeOpts{
+		Namespace: namespace,
+		Name: "data_directory_size_bytes",
+		Help: "The total size of the data directory",
+	}, b.chatsizeMetric)
+	return chatSize
+}
+
+func (b *Bot) chatsizeMetric() float64 {
+	size, err := util.DirectorySize(b.v.GetString("data_directory"))
+	if err != nil {
+		return 0
+	}
+	return float64(size)
+}
 
 func getPrometheusRegistry() prometheus.Collector {
 	reg := prometheus.NewRegistry()
