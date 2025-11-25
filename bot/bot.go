@@ -11,6 +11,7 @@ import (
 	"github.com/a-random-lemurian/go-owot-log/bot/cmdcore"
 	"github.com/a-random-lemurian/go-owot-log/bot/lastseen"
 	"github.com/a-random-lemurian/go-owot-log/bot/world"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/a-random-lemurian/go-owot"
 	
@@ -93,13 +94,28 @@ func (b *Bot) initWorlds(wg *sync.WaitGroup) {
 				world, err := world.CreateWorld(worldName, b.log, b, acceptsGlobal, nickname)
 				if err != nil {
 					b.log.Error("Cannot create World", zap.String("worldName", worldName), zap.Error(err))
+
+					worldConnections.With(prometheus.Labels{
+						"status": "failure",
+					}).Inc()
+
 					time.Sleep(1 * time.Second)
 					continue
 				}
+
+				worldConnections.With(prometheus.Labels{
+					"status": "success",
+				}).Inc()
+				worldGauge.Inc()
+
 				err = world.Run()
 				if err != nil {
 					b.log.Warn("Disconnected from world, reconnecting", zap.String("worldName", worldName), zap.Error(err))
 				}
+
+				worldGauge.Dec()
+				worldDisconnects.Inc()
+
 				time.Sleep(1 * time.Second)
 			}
 		}()
