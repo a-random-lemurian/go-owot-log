@@ -14,7 +14,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/a-random-lemurian/go-owot"
-	
+
 	"github.com/carlmjohnson/versioninfo"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
@@ -33,7 +33,7 @@ type Bot struct {
 	msgCount     *chsize.MsgCounter
 	trustedUsers map[string]any
 	lastseen     *lastseen.Lastseen
-	botprom *botprom.BotPrometheus
+	botprom      *botprom.BotPrometheus
 	messageSinks []MessageSink
 }
 
@@ -185,7 +185,7 @@ func (b *Bot) Run() error {
 	b.initWorlds(&wg)
 
 	wg.Add(1)
-	go func () {
+	go func() {
 		defer wg.Done()
 		err := b.botprom.Run()
 		log.Error("prometheus died", zap.Error(err))

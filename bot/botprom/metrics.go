@@ -32,8 +32,8 @@ type BotPrometheus struct {
 func NewBotPrometheus(listen string, log *zap.Logger) (*BotPrometheus, error) {
 	bp := &BotPrometheus{
 		metrics: prometheus.NewRegistry(),
-		listen: listen,
-		log: log.Named("botprom"),
+		listen:  listen,
+		log:     log.Named("botprom"),
 	}
 
 	bp.metrics.MustRegister(

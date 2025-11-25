@@ -10,9 +10,9 @@ import (
 	"github.com/a-random-lemurian/go-owot"
 
 	slogGorm "github.com/orandin/slog-gorm"
+	"github.com/pkg/errors"
 	slogzap "github.com/samber/slog-zap/v2"
 	"github.com/spf13/viper"
-	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"

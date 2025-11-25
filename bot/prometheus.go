@@ -19,7 +19,7 @@ var (
 	})
 	worldGauge = prometheus.NewGauge(prometheus.GaugeOpts{
 		Namespace: namespace,
-		Name: "connected_worlds",
-		Help: "The total number of worlds being actively logged by the bot",
+		Name:      "connected_worlds",
+		Help:      "The total number of worlds being actively logged by the bot",
 	})
 )

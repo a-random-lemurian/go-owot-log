@@ -22,7 +22,7 @@ type botContext struct {
 func (bc *botContext) Chat(message string) {
 	final := ""
 	if bc.c.PrivateMessage != nil && *bc.c.PrivateMessage == owot.PMTToMe {
-		final += fmt.Sprintf("/tell %s ", bc.c.Id) 
+		final += fmt.Sprintf("/tell %s ", bc.c.Id)
 	}
 	final += message
 	bc.w.Chat(final, bc.c.Location.String())
