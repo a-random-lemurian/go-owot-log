@@ -53,10 +53,12 @@ func CreateWorld(worldName string, log *zap.Logger, rawSink RawSink, acceptGloba
 		return nil, err
 	}
 
+	newLog := log.Named("world").With(zap.String("worldName", worldName))
+
 	world := &World{
 		owotConn:     conn,
 		url:          url,
-		appLog:       log,
+		appLog:       newLog,
 		AcceptGlobal: acceptGlobal,
 		rawSink:      rawSink,
 		nickname:     nickname,
@@ -65,7 +67,6 @@ func CreateWorld(worldName string, log *zap.Logger, rawSink RawSink, acceptGloba
 	conn.HandleRaw = world.handleRaw
 
 	world.appLog.Info("Created world",
-		zap.String("worldName", worldName),
 		zap.String("url", url),
 		zap.Bool("acceptsGlobal", acceptGlobal),
 	)
