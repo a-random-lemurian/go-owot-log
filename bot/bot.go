@@ -153,6 +153,7 @@ func (b *Bot) initPrometheus() error {
 	b.botprom = bp
 
 	b.RegisterMessageSink(bp)
+	bp.MustRegister(getPrometheusRegistry())
 
 	return nil
 }

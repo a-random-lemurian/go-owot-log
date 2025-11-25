@@ -23,3 +23,9 @@ var (
 		Help:      "The total number of worlds being actively logged by the bot",
 	})
 )
+
+func getPrometheusRegistry() prometheus.Collector {
+	reg := prometheus.NewRegistry()
+	reg.MustRegister(worldConnections, worldDisconnects, worldGauge)
+	return reg
+}
