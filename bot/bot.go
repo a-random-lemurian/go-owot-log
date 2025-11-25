@@ -84,41 +84,51 @@ func (b *Bot) initWorlds(wg *sync.WaitGroup) {
 	globalReceiver := b.v.GetString("global_receiver")
 	nickname := b.v.GetString("chat.nickname")
 
+	b.log.Info("launching world managers")
+
 	for _, worldName := range worlds {
 		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			b.log.Info("Creating world", zap.String("worldName", worldName))
-			acceptsGlobal := (worldName == globalReceiver)
-			for {
-				world, err := world.CreateWorld(worldName, b.log, b, acceptsGlobal, nickname)
-				if err != nil {
-					b.log.Error("Cannot create World", zap.String("worldName", worldName), zap.Error(err))
 
-					worldConnections.With(prometheus.Labels{
-						"status": "failure",
-					}).Inc()
+		acceptsGlobal := (worldName == globalReceiver)
 
-					time.Sleep(1 * time.Second)
-					continue
-				}
+		go b.manageWorld(wg, worldName, acceptsGlobal, nickname)
+	}
+}
 
-				worldConnections.With(prometheus.Labels{
-					"status": "success",
-				}).Inc()
-				worldGauge.Inc()
+func (b *Bot) manageWorld(wg *sync.WaitGroup, worldName string, acceptsGlobal bool, nickname string) {
+	defer wg.Done()
+	log := b.log.Named("worldmanager").With(zap.String("worldName", worldName))
+	defer log.Info("worldmanager shutting down")
 
-				err = world.Run()
-				if err != nil {
-					b.log.Warn("Disconnected from world, reconnecting", zap.String("worldName", worldName), zap.Error(err))
-				}
+	for {
+		log.Info("Creating world", zap.String("worldName", worldName))
+		world, err := world.CreateWorld(worldName, b.log, b, acceptsGlobal, nickname)
 
-				worldGauge.Dec()
-				worldDisconnects.Inc()
+		if err != nil {
+			log.Error("Cannot create World", zap.Error(err))
 
-				time.Sleep(1 * time.Second)
-			}
-		}()
+			worldConnections.With(prometheus.Labels{
+				"status": "failure",
+			}).Inc()
+
+			time.Sleep(1 * time.Second)
+			continue
+		}
+
+		worldConnections.With(prometheus.Labels{
+			"status": "success",
+		}).Inc()
+		worldGauge.Inc()
+
+		err = world.Run()
+		if err != nil {
+			log.Warn("Disconnected from world, reconnecting", zap.Error(err))
+		}
+
+		worldGauge.Dec()
+		worldDisconnects.Inc()
+
+		time.Sleep(1 * time.Second)
 	}
 }
 
